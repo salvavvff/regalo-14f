@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocolo: 14F</title>
+    <style>
+        /* --- ESTILO GENERAL --- */
+        :root {
+            --bg-color: #2b3e50;
+            --chalk-white: #fcfbf9;
+            --chalk-yellow: #f5e050;
+            --chalk-pink: #ff99cc;
+            --chalk-blue: #89CFF0;
+            --tech-green: #0f0;
+            --font-hand: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            --font-terminal: 'Courier New', monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--chalk-white);
+            font-family: var(--font-hand);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            background-image: radial-gradient(#3a4f63 20%, transparent 20%);
+            background-size: 20px 20px;
+            overflow-x: hidden;
+            user-select: none; /* Evita que seleccione texto al dar clics rápidos */
+        }
+
+        .container {
+            border: 4px dashed var(--chalk-white);
+            border-radius: 15px;
+            padding: 1.5rem;
+            max-width: 600px;
+            width: 90%;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- INTRO TERMINAL --- */
+        #intro-terminal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; color: #0f0; font-family: var(--font-terminal);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; text-align: left; padding: 20px; box-sizing: border-box;
+        }
+        .typing-text { font-size: 1.2rem; white-space: pre-wrap; }
+        .cursor { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* --- GENERALES --- */
+        h1 { color: var(--chalk-yellow); text-transform: uppercase; border-bottom: 2px solid var(--chalk-white); display: inline-block; padding-bottom: 10px; font-size: 1.8rem; }
+        p { font-size: 1.1rem; line-height: 1.4; }
+        .hidden { display: none; }
+        input { background: transparent; border: none; border-bottom: 3px solid var(--chalk-pink); color: var(--chalk-white); font-family: var(--font-hand); font-size: 1.5rem; padding: 10px; margin-top: 20px; outline: none; width: 70%; text-align: center; }
+        input::placeholder { color: rgba(255,255,255,0.5); font-size: 1rem; }
+        button { margin-top: 25px; background: var(--chalk-blue); color: #2b3e50; border: none; border-radius: 20px; padding: 12px 30px; font-family: var(--font-hand); font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; box-shadow: 3px 3px 0px rgba(0,0,0,0.2); }
+        button:hover { transform: scale(1.05); background: var(--chalk-white); }
+        button:disabled { background: #555; cursor: not-allowed; transform: none; }
+        .error-msg { color: #ff6b6b; margin-top: 15px; font-weight: bold; min-height: 24px;}
+        .img-reto { max-width: 100%; border-radius: 10px; transform: rotate(-2deg); margin: 10px 0; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+        .texto-amarillo { color: var(--chalk-yellow); font-family: var(--font-hand); font-size: 2rem; font-weight: bold; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4); margin: 5px 0 20px 0; transform: rotate(-2deg); letter-spacing: 1px; }
+
+        /* --- MEMORAMA --- */
+        .grid-memorama { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 20px; }
+        .carta { background-color: var(--chalk-blue); height: 60px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; color: transparent; border: 2px dashed white; transition: transform 0.3s, background 0.3s; user-select: none; }
+        .carta.volteada { background-color: var(--chalk-white); color: #333; transform: rotateY(180deg); }
+        .carta.emparejada { background-color: var(--chalk-yellow); color: #333; animation: bounce 0.5s; }
+
+        /* --- BOLETA --- */
+        .boleta-table { width: 100%; margin-top: 15px; border-collapse: collapse; color: white; }
+        .boleta-table th { border-bottom: 2px solid var(--chalk-yellow); padding: 10px; color: var(--chalk-yellow); }
+        .boleta-table td { border-bottom: 1px dashed rgba(255,255,255,0.3); padding: 8px; text-align: left; }
+        .nota { color: var(--chalk-pink); font-weight: bold; text-align: right !important; }
+
+        /* --- GPS --- */
+        .radar-box { width: 120px; height: 120px; background: rgba(0, 255, 0, 0.1); border: 2px solid var(--tech-green); border-radius: 50%; margin: 20px auto; position: relative; overflow: hidden; box-shadow: 0 0 15px var(--tech-green); }
+        .radar-sweep { position: absolute; top: 50%; left: 50%; width: 50%; height: 2px; background: var(--tech-green); transform-origin: 0 0; animation: sweep 2s infinite linear; box-shadow: 0 0 10px var(--tech-green); }
+        @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .coordenadas { font-family: var(--font-terminal); color: var(--tech-green); font-size: 1.2rem; letter-spacing: 2px; background: #000; padding: 10px; margin: 10px auto; display: inline-block; border-radius: 5px; }
+
+        /* --- BARRA DE CARGA --- */
+        .progress-container { width: 100%; background-color: #444; border-radius: 20px; margin-top: 20px; border: 2px solid white; height: 25px; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background-color: var(--chalk-pink); transition: width 0.5s; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 20px); }
+        .loading-text { font-family: var(--font-terminal); color: var(--chalk-yellow); margin-top: 10px; font-size: 0.9rem; min-height: 20px; }
+
+        /* --- UPTIME COUNTER (NUEVO) --- */
+        .uptime-box {
+            font-family: var(--font-terminal);
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--chalk-white);
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--chalk-blue);
+        }
+        .time-number { color: var(--chalk-yellow); font-weight: bold; font-size: 1.1rem; }
+
+        /* --- CHECKBOX FINAL --- */
+        .checkbox-container { margin-top: 15px; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+        .checkbox-container input { width: 20px; height: 20px; margin: 0; cursor: pointer; }
+
+        /* --- ANIMACIONES --- */
+        .heart { position: fixed; top: -10vh; color: rgba(255, 100, 150, 0.6); font-size: 1.5rem; animation: fall linear infinite; z-index: 1; }
+        .click-emoji { position: absolute; pointer-events: none; animation: floatUp 1s ease-out forwards; font-size: 2rem; z-index: 100; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-50px) scale(1.5); } }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .fade-in { animation: fadeIn 1s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body onclick="crearEmojiClick(event)">
+
+    <div id="intro-terminal">
+        <div class="typing-text" id="terminal-text"></div>
+        <span class="cursor">_</span>
+    </div>
+
+    <div id="level-1" class="container hidden fade-in">
+        <h1>🍎 Pase de Lista</h1>
+        <p>¡Bienvenida, Maestra Perlita!</p>
+        <p>Sistema inicializado correctamente.</p>
+        <p>Confirme contraseña de acceso (Aniversario DDMMAA):</p>
+        <input type="text" id="pass-1" placeholder="Ej: 140226">
+        <br>
+        <button onclick="checkLevel1(event)">¡Presente!</button>
+        <p class="error-msg" id="error-1"></p>
+    </div>
+
+    <div id="level-gps" class="container hidden fade-in">
+        <h1>📡 Ubicación Secreta</h1>
+        <div class="radar-box"><div class="radar-sweep"></div></div>
+        <p>El satélite del amor ha detectado nuestras coordenadas favoritas:</p>
+        <div class="coordenadas">21°51'05.8"N, 102°17'29.4"W</div>
+        <p>¿Qué lugar especial es este?</p>
+        <input type="text" id="pass-gps" placeholder="Ej: no se, buscale">
+        <br>
+        <button onclick="checkLevelGPS(event)">Confirmar Destino</button>
+        <p class="error-msg" id="error-gps"></p>
+    </div>
+
+    <div id="level-2" class="container hidden fade-in">
+        <h1>✌️ Reto de Señas 🖐️</h1>
+        <p>Una buena maestra sabe comunicarse de todas las formas.</p>
+        <img src="reto-senas.png" alt="Manos haciendo señas" class="img-reto">
+        <div class="texto-amarillo"><span class="brillo">✨</span> NO LO OLVIDES <span class="brillo">✨</span></div>
+        <input type="text" id="pass-2" placeholder="Escribe la palabra aquí">
+        <br>
+        <button onclick="checkLevel2(event)">Calificar Respuesta</button>
+        <p class="error-msg" id="error-2"></p>
+    </div>
+
+    <div id="level-qr" class="container hidden fade-in">
+        <h1>📱 Protocolo</h1>
+        <p>Para asegurar que eres tú, necesitamos autenticación de 2 pasos, ni modo.</p>
+        <p>Escanea este código y escribe la palabra secreta:</p>
+        <img src="codigo-qr.png" alt="Escanea con tu cel" style="width: 150px; border: 5px solid white; border-radius: 10px;">
+        <br>
+        <input type="text" id="pass-qr" placeholder="Código secreto del celular">
+        <br>
+        <button onclick="checkLevelQR(event)">Desbloquear Candado</button>
+        <p class="error-msg" id="error-qr"></p>
+    </div>
+
+    <div id="level-3" class="container hidden fade-in">
+        <h1>🧩 Cosas que amamos</h1>
+        <p>Encuentra los pares de nuestras cosas favoritas:</p>
+        <div class="grid-memorama" id="tablero-juego"></div>
+        <br>
+        <p id="mensaje-memorama" style="height: 20px; color: var(--chalk-yellow); font-weight:bold;"></p>
+    </div>
+
+    <div id="level-4" class="container hidden fade-in">
+        <h1>📋 Boleta Final</h1>
+        <p>Resultados de la evaluación de la Maestra:</p>
+        <table class="boleta-table">
+            <thead><tr><th>Materia / Habilidad</th><th style="text-align: right;">Calif.</th></tr></thead>
+            <tbody>
+                <tr><td>Ser la mejor novia</td><td class="nota">10.0</td></tr>
+                <tr><td>Preparar Chaskas</td><td class="nota">10.0</td></tr>
+                <tr><td>Paciencia con tu hombre</td><td class="nota">10.0</td></tr>
+                <tr><td>Cuidado de tus bebes 🐇🐶</td><td class="nota">10.0</td></tr>
+                <tr><td>Belleza y Berrinchuda</td><td class="nota">EXCELENCIA</td></tr>
+            </tbody>
+        </table>
+        <button onclick="iniciarCalculoCompatibilidad(event)">Calcular Compatibilidad Final</button>
+    </div>
+
+    <div id="level-loading" class="container hidden fade-in">
+        <h1>⚙️ Procesando...</h1>
+        <p>Analizando datos para el veredicto final.</p>
+        <div class="progress-container">
+            <div class="progress-bar" id="barra-progreso"></div>
+        </div>
+        <p class="loading-text" id="texto-carga">Iniciando...</p>
+    </div>
+
+    <div id="final-screen" class="container hidden fade-in">
+        <h1>🌟 ¡APROBADAAA! 🌟</h1>
+        <p>Compatibilidad: <strong>1,000,000%</strong></p>
+        
+        <div class="uptime-box">
+            <div>TIEMPO DESDE EL QUE SOY FELIZ A TU LADO:</div>
+            <div id="uptime-counter" style="margin-top: 5px;">Calculando...</div>
+        </div>
+
+        <div style="background: white; color: #333; padding: 20px; transform: rotate(1deg); margin-top: 20px; box-shadow: 0 0 10px black;">
+            <h2 style="color: #333; border-bottom: 2px solid #333;">Vale por:</h2>
+            <h1 style="color: #ff0055; border:none; font-size: 2.2rem; margin: 10px 0;">UNA CHASKITA O LO QUE TÚ QUIERAS</h1>
+            <p>(Y mil besos de tu chiriguillo favorito)</p>
+            <p style="font-size: 0.8rem; color: #666;">Válido: 14 de Febrero</p>
+        </div>
+
+        <label class="checkbox-container">
+            <input type="checkbox" id="check-besos" onchange="habilitarBotonFinal()">
+            <span>Acepto dar 20.5 besitos como impuesto por este regalo.</span>
+        </label>
+
+        <button id="btn-reclamar" disabled onclick="alert('¡Te amo! DAME LOS BESOS si no, no hay nada ❤️')">RECLAMAR PREMIO</button>
+
+        <p style="margin-top:30px; font-size: 1.5rem;">Te amo muchísimo princesa ❤️</p>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN ---
+        const CONFIG = {
+            nivel1_respuesta: "010121", 
+            gps_respuesta: "parque rodolfo landeros", // TU LUGAR
+            nivel2_respuesta: "eres increible",
+            qr_respuesta: "besame",
+            fecha_inicio: new Date("2021-01-01T00:00:00") // FECHA DE ANIVERSARIO PARA EL CONTADOR
+        };
+
+        // --- INTRO ---
+        window.onload = function() {
+            const lines = ["Initializing HeartOS v14.02...", "Connecting to server: LOVE_DATABASE...", "Downloading 'Cariño.exe'...", "Access Granted: Chiriguilla detected.", "Starting Graphic Interface..."];
+            const terminal = document.getElementById('terminal-text');
+            let i = 0;
+            function typeLine() {
+                if (i < lines.length) {
+                    terminal.innerHTML += lines[i] + "<br>"; i++; setTimeout(typeLine, 600);
+                } else {
+                    setTimeout(() => {
+                        document.getElementById('intro-terminal').style.display = 'none';
+                        document.getElementById('level-1').classList.remove('hidden');
+                    }, 1000);
+                }
+            }
+            typeLine();
+            setInterval(updateUptime, 1000); // Inicia el reloj
+        };
+
+        function show(id) {
+            document.querySelectorAll('.container').forEach(el => el.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        // --- VALIDACIONES ---
+        function checkLevel1(e) { if(e) e.stopPropagation(); if(document.getElementById('pass-1').value.trim() === CONFIG.nivel1_respuesta) show('level-gps'); else document.getElementById('error-1').innerText = "❌ Fecha incorrecta."; }
+        function checkLevelGPS(e) { if(e) e.stopPropagation(); if(document.getElementById('pass-gps').value.toLowerCase().includes(CONFIG.gps_respuesta)) show('level-2'); else document.getElementById('error-gps').innerText = "❌ Ubicación incorrecta. Pista: Es donde..."; }
+        function checkLevel2(e) { if(e) e.stopPropagation(); if(document.getElementById('pass-2').value.toLowerCase().trim() === CONFIG.nivel2_respuesta) show('level-qr'); else document.getElementById('error-2').innerText = "❌ Esa no es la palabra."; }
+        function checkLevelQR(e) { if(e) e.stopPropagation(); if(document.getElementById('pass-qr').value.toLowerCase().trim() === CONFIG.qr_respuesta) { show('level-3'); iniciarMemorama(); } else document.getElementById('error-qr').innerText = "❌ Código inválido."; }
+
+        // --- BARRA DE CARGA ---
+        function iniciarCalculoCompatibilidad(e) {
+            if(e) e.stopPropagation();
+            show('level-loading');
+            const barra = document.getElementById('barra-progreso');
+            const texto = document.getElementById('texto-carga');
+            let width = 0;
+            const intervalo = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(intervalo); setTimeout(() => { showFinal(); }, 700);
+                } else {
+                    width++; barra.style.width = width + '%';
+                    if(width < 30) texto.innerText = "Analizando nivel de berrinches...";
+                    else if(width < 60) texto.innerText = "Calculando aguante del Ingeniero...";
+                    else if(width < 90) texto.innerText = "Midiendo dulzura de la Maestra...";
+                    else texto.innerText = "¡COMPATIBILIDAD ENCONTRADA!";
+                }
+            }, 50);
+        }
+
+        function showFinal() { show('final-screen'); lanzarEfectosFinales(); }
+
+        function habilitarBotonFinal() {
+            const check = document.getElementById('check-besos');
+            const btn = document.getElementById('btn-reclamar');
+            btn.disabled = !check.checked;
+            if(check.checked) { btn.style.backgroundColor = "#ff0055"; btn.style.color = "white"; btn.innerText = "¡RECLAMAR AHORA!"; } 
+            else { btn.style.backgroundColor = "#555"; btn.innerText = "RECLAMAR PREMIO"; }
+        }
+
+        // --- UPTIME COUNTER (RELOJ EN VIVO) ---
+        function updateUptime() {
+            const now = new Date();
+            const diff = now - CONFIG.fecha_inicio;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('uptime-counter').innerHTML = 
+                `<span class="time-number">${days}</span> Días <span class="time-number">${hours}</span> Hrs <span class="time-number">${minutes}</span> Min <span class="time-number">${seconds}</span> Seg`;
+        }
+
+        // --- MEMORAMA ---
+        const emojis = ['🌽', '🌽', '🐰', '🐰', '🦖', '🦖', '❄️', '❄️', '❤️', '❤️']; 
+        let cartasVolteadas = []; let paresEncontrados = 0; let bloqueoTablero = false;
+
+        function iniciarMemorama() {
+            const tablero = document.getElementById('tablero-juego'); tablero.innerHTML = ''; 
+            emojis.sort(() => 0.5 - Math.random()); 
+            emojis.forEach((emoji) => {
+                const carta = document.createElement('div'); carta.classList.add('carta'); carta.dataset.valor = emoji;
+                carta.onclick = (e) => { e.stopPropagation(); voltearCarta(carta); }; tablero.appendChild(carta);
+            });
+        }
+        function voltearCarta(carta) {
+            if (bloqueoTablero || carta.classList.contains('volteada')) return;
+            carta.classList.add('volteada'); carta.innerText = carta.dataset.valor;
+            cartasVolteadas.push(carta);
+            if (cartasVolteadas.length === 2) { bloqueoTablero = true; setTimeout(verificarPareja, 800); }
+        }
+        function verificarPareja() {
+            const [c1, c2] = cartasVolteadas;
+            if (c1.dataset.valor === c2.dataset.valor) {
+                c1.classList.add('emparejada'); c2.classList.add('emparejada'); paresEncontrados++;
+                if(c1.dataset.valor === '🌽') msg("¡Mmm... unas Chaskas!");
+                else if(c1.dataset.valor === '🦖') msg("¡Rawr! Dinos juntos.");
+                else if(c1.dataset.valor === '❄️') msg("Nos gusta el frío 🥶");
+                else msg(getRandomElogio());
+                
+                if (paresEncontrados === emojis.length / 2) setTimeout(() => show('level-4'), 800);
+            } else {
+                c1.classList.remove('volteada'); c1.innerText = ''; c2.classList.remove('volteada'); c2.innerText = '';
+                msg("Intenta de nuevo...");
+            }
+            cartasVolteadas = []; bloqueoTablero = false;
+        }
+        function msg(t) { document.getElementById('mensaje-memorama').innerText = t; }
+        function getRandomElogio() { return ["¡Qué lista!", "¡Te amo!", "¡Sigue así!", "¡Mi maestra favorita!", "¡Eres la mejor!"][Math.floor(Math.random()*5)]; }
+
+        // --- EFECTOS ---
+        function lanzarEfectosFinales() {
+            document.body.style.backgroundImage = "none"; document.body.style.backgroundColor = "#ff99cc"; crearLluviaCorazones();
+        }
+        function crearLluviaCorazones() {
+            setInterval(() => {
+                const h = document.createElement('div'); h.classList.add('heart'); h.innerText = '❤️';
+                h.style.left = Math.random() * 100 + 'vw'; h.style.animationDuration = Math.random() * 2 + 3 + 's'; 
+                document.body.appendChild(h); setTimeout(() => h.remove(), 5000); 
+            }, 300);
+        }
+        
+        // EMOJIS AL HACER CLICK
+        function crearEmojiClick(e) {
+            const emojisClick = ['🦖', '🌽', '❤️', '🐰', '✨'];
+            const el = document.createElement('div');
+            el.innerText = emojisClick[Math.floor(Math.random() * emojisClick.length)];
+            el.classList.add('click-emoji');
+            el.style.left = e.clientX + 'px';
+            el.style.top = e.clientY + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+    </script>
+</body>
+</html>
